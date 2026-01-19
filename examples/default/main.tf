@@ -21,12 +21,20 @@ provider "azurerm" {
   features {}
 }
 
+provider "azapi" {}
+
+data "azapi_client_config" "current" {}
 
 ## Section to provide a random Azure region for the resource group
 # This allows us to randomize the region for the resource group.
 module "regions" {
-  source  = "Azure/regions/azurerm"
-  version = "~> 0.3"
+  source  = "Azure/avm-utl-regions/azurerm"
+  version = "0.9.3"
+
+  enable_telemetry       = var.enable_telemetry
+  has_availability_zones = true
+  is_recommended         = true
+  use_cached_data        = true
 }
 
 # This allows us to randomize the region for the resource group.
@@ -39,62 +47,120 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/naming/azurerm"
-  version = "~> 0.3"
+  version = "0.4.3"
+}
+
+# Generate a random password for the VM admin
+resource "random_password" "admin_password" {
+  length           = 22
+  min_lower        = 2
+  min_numeric      = 2
+  min_special      = 2
+  min_upper        = 2
+  override_special = "!@#$%&*()-_=+[]{}:?"
+  special          = true
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+resource "azapi_resource" "resource_group" {
   location = module.regions.regions[random_integer.region_index.result].name
   name     = module.naming.resource_group.name_unique
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-# Create a virtual network and subnet for the example
-resource "azurerm_virtual_network" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.virtual_network.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "this" {
-  address_prefixes     = ["10.0.1.0/24"]
-  name                 = "subnet-default"
-  resource_group_name  = azurerm_resource_group.this.name
-  virtual_network_name = azurerm_virtual_network.this.name
+# Create a virtual network for the example
+resource "azapi_resource" "virtual_network" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.virtual_network.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualNetworks@2024-01-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.0.0.0/16"]
+      }
+      subnets = [
+        {
+          name = "subnet-default"
+          properties = {
+            addressPrefix = "10.0.1.0/24"
+          }
+        }
+      ]
+    }
+  }
+  response_export_values = ["properties.subnets"]
 }
 
 # Create a network interface for the VM
-resource "azurerm_network_interface" "this" {
-  location            = azurerm_resource_group.this.location
-  name                = module.naming.network_interface.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-
-  ip_configuration {
-    name                          = "internal"
-    private_ip_address_allocation = "Dynamic"
-    subnet_id                     = azurerm_subnet.this.id
+resource "azapi_resource" "network_interface" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.network_interface.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/networkInterfaces@2024-01-01"
+  body = {
+    properties = {
+      ipConfigurations = [
+        {
+          name = "internal"
+          properties = {
+            privateIPAllocationMethod = "Dynamic"
+            subnet = {
+              id = "${azapi_resource.virtual_network.id}/subnets/subnet-default"
+            }
+          }
+        }
+      ]
+    }
   }
 }
 
 # Create a Windows VM with SQL Server
-resource "azurerm_windows_virtual_machine" "this" {
-  admin_password        = "P@ssw0rd1234!"
-  admin_username        = "adminuser"
-  location              = azurerm_resource_group.this.location
-  name                  = module.naming.virtual_machine.name_unique
-  network_interface_ids = [azurerm_network_interface.this.id]
-  resource_group_name   = azurerm_resource_group.this.name
-  size                  = "Standard_D2s_v3"
-
-  os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
-  }
-  source_image_reference {
-    offer     = "sql2019-ws2019"
-    publisher = "MicrosoftSQLServer"
-    sku       = "sqldev"
-    version   = "latest"
+resource "azapi_resource" "windows_virtual_machine" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.virtual_machine.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Compute/virtualMachines@2024-03-01"
+  body = {
+    properties = {
+      hardwareProfile = {
+        vmSize = "Standard_D2s_v3"
+      }
+      osProfile = {
+        computerName  = module.naming.virtual_machine.name_unique
+        adminUsername = "adminuser"
+        adminPassword = random_password.admin_password.result
+        windowsConfiguration = {
+          provisionVMAgent       = true
+          enableAutomaticUpdates = true
+        }
+      }
+      networkProfile = {
+        networkInterfaces = [
+          {
+            id = azapi_resource.network_interface.id
+            properties = {
+              primary = true
+            }
+          }
+        ]
+      }
+      storageProfile = {
+        imageReference = {
+          publisher = "MicrosoftSQLServer"
+          offer     = "sql2019-ws2019"
+          sku       = "sqldev"
+          version   = "latest"
+        }
+        osDisk = {
+          createOption = "FromImage"
+          caching      = "ReadWrite"
+          managedDisk = {
+            storageAccountType = "Premium_LRS"
+          }
+        }
+      }
+    }
   }
 }
 
@@ -102,10 +168,10 @@ resource "azurerm_windows_virtual_machine" "this" {
 module "test" {
   source = "../../"
 
-  location                    = azurerm_resource_group.this.location
-  name                        = "${module.naming.mssql_server.name_unique}-sqlvm"
-  resource_group_name         = azurerm_resource_group.this.name
-  virtual_machine_resource_id = azurerm_windows_virtual_machine.this.id
+  location                    = azapi_resource.resource_group.location
+  name                        = azapi_resource.windows_virtual_machine.name
+  resource_group_name         = azapi_resource.resource_group.name
+  virtual_machine_resource_id = azapi_resource.windows_virtual_machine.id
   enable_telemetry            = var.enable_telemetry
   sql_image_offer             = "SQL2019-WS2019"
   sql_image_sku               = "Developer"

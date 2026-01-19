@@ -4,7 +4,7 @@ resource "azapi_resource" "this" {
   name      = var.name
   parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
   type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01"
-  body = jsonencode({
+  body = {
     properties = {
       virtualMachineResourceId = var.virtual_machine_resource_id
       sqlServerLicenseType     = var.sql_server_license_type
@@ -12,7 +12,7 @@ resource "azapi_resource" "this" {
       sqlImageSku              = var.sql_image_sku
       sqlImageOffer            = var.sql_image_offer
     }
-  })
+  }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

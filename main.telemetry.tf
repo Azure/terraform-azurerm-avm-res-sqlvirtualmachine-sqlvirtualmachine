@@ -68,7 +68,7 @@ locals {
 }
 locals {
   main_location              = var.location
-  telem_arm_deployment_name  = "46d3xbcp.res.sqlvirtualmachine-sqlvirtualmachine.${replace(random_id.telem[0].hex, "-", "")}.${local.telem_arm_template_hash}"
+  telem_arm_deployment_name  = "46d3xbcp.res.sqlvm-sqlvm.${replace(random_id.telem[0].hex, "-", "")}.${local.telem_arm_template_hash}"
   telem_arm_template_content = <<TEMPLATE
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
