@@ -179,7 +179,7 @@ module "resource_group" {
 
   enable_telemetry = true
   location         = var.location
-  name            = var.resource_group_name
+  name             = var.resource_group_name
 }
 ```
 
