@@ -40,11 +40,11 @@ variable "create_default_availability_group_if_not_exist" {
 variable "load_balancer_configurations" {
   type = list(object({
     private_ip_address = object({
-      ip_address            = string
-      subnet_resource_id    = string
+      ip_address         = string
+      subnet_resource_id = string
     })
-    load_balancer_resource_id = optional(string)
-    probe_port                = optional(number)
+    load_balancer_resource_id     = optional(string)
+    probe_port                    = optional(number)
     public_ip_address_resource_id = optional(string)
     sql_virtual_machine_instances = list(string)
   }))

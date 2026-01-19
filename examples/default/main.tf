@@ -105,15 +105,15 @@ module "test" {
 
   # source             = "Azure/avm-res-sqlvirtualmachine-sqlvirtualmachine/azurerm"
   # version            = "~> 0.1"
-  
-  enable_telemetry             = var.enable_telemetry
-  location                     = azurerm_resource_group.this.location
-  name                         = "${module.naming.mssql_server.name_unique}-sqlvm"
-  resource_group_name          = azurerm_resource_group.this.name
-  virtual_machine_resource_id  = azurerm_windows_virtual_machine.this.id
-  sql_server_license_type      = "PAYG"
-  sql_management               = "Full"
-  sql_image_sku                = "Developer"
-  sql_image_offer              = "SQL2019-WS2019"
+
+  enable_telemetry            = var.enable_telemetry
+  location                    = azurerm_resource_group.this.location
+  name                        = "${module.naming.mssql_server.name_unique}-sqlvm"
+  resource_group_name         = azurerm_resource_group.this.name
+  virtual_machine_resource_id = azurerm_windows_virtual_machine.this.id
+  sql_server_license_type     = "PAYG"
+  sql_management              = "Full"
+  sql_image_sku               = "Developer"
+  sql_image_offer             = "SQL2019-WS2019"
 }
 

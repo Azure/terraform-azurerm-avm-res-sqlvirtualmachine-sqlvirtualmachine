@@ -16,15 +16,13 @@ resource "azapi_resource" "this" {
   location  = var.location
   parent_id = "/subscriptions/${var.subscription_id}/resourceGroups/${var.resource_group_name}"
 
-  body = {
+  body = jsonencode({
     properties = {
-      sqlImageOffer              = var.sql_image_offer
-      sqlImageSku                = var.sql_image_sku
-      wsfcDomainProfile          = var.wsfc_domain_profile
-      clusterManagerType         = var.cluster_manager_type
-      clusterSubnetType          = var.cluster_subnet_type
+      sqlImageOffer     = var.sql_image_offer
+      sqlImageSku       = var.sql_image_sku
+      wsfcDomainProfile = var.wsfc_domain_profile
     }
-  }
+  })
 
   tags = var.tags
 }

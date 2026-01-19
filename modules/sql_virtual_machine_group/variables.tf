@@ -45,40 +45,18 @@ variable "sql_image_sku" {
 
 variable "wsfc_domain_profile" {
   type = object({
-    domain_fqdn                         = string
-    cluster_bootstrap_account           = optional(string)
-    cluster_operator_account            = optional(string)
-    sql_service_account                 = optional(string)
-    storage_account_url                 = optional(string)
-    storage_account_primary_key         = optional(string)
-    organizational_unit_path            = optional(string)
-    file_share_witness_path             = optional(string)
-    cluster_subnet_type                 = optional(string)
+    domain_fqdn                 = string
+    cluster_bootstrap_account   = optional(string)
+    cluster_operator_account    = optional(string)
+    sql_service_account         = optional(string)
+    storage_account_url         = optional(string)
+    storage_account_primary_key = optional(string)
+    organizational_unit_path    = optional(string)
+    file_share_witness_path     = optional(string)
+    cluster_subnet_type         = optional(string)
   })
   description = "Windows Server Failover Cluster domain profile configuration."
   default     = null
-}
-
-variable "cluster_manager_type" {
-  type        = string
-  description = "The type of cluster manager. Possible values are 'WSFC' for Windows Server Failover Cluster."
-  default     = "WSFC"
-
-  validation {
-    condition     = contains(["WSFC"], var.cluster_manager_type)
-    error_message = "The cluster_manager_type must be 'WSFC'."
-  }
-}
-
-variable "cluster_subnet_type" {
-  type        = string
-  description = "The cluster subnet type. Possible values are 'SingleSubnet' or 'MultiSubnet'."
-  default     = "SingleSubnet"
-
-  validation {
-    condition     = contains(["SingleSubnet", "MultiSubnet"], var.cluster_subnet_type)
-    error_message = "The cluster_subnet_type must be one of: 'SingleSubnet' or 'MultiSubnet'."
-  }
 }
 
 variable "tags" {
