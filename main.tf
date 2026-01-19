@@ -1,10 +1,9 @@
 # Main SQL Virtual Machine resource
 resource "azapi_resource" "this" {
-  type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01"
-  name      = var.name
   location  = var.location
+  name      = var.name
   parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
-
+  type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01"
   body = jsonencode({
     properties = {
       virtualMachineResourceId = var.virtual_machine_resource_id
@@ -14,6 +13,12 @@ resource "azapi_resource" "this" {
       sqlImageOffer            = var.sql_image_offer
     }
   })
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = ["*"]
+  tags                   = var.tags
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
   dynamic "identity" {
     for_each = local.managed_identities.system_assigned_user_assigned
@@ -23,14 +28,6 @@ resource "azapi_resource" "this" {
       identity_ids = identity.value.user_assigned_resource_ids
     }
   }
-
-  tags = var.tags
-
-  response_export_values = ["*"]
-  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 data "azapi_client_config" "current" {}

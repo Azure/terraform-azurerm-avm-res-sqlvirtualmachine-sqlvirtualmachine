@@ -1,19 +1,22 @@
-# terraform-azurerm-avm-template
+# terraform-azurerm-avm-res-sqlvirtualmachine-sqlvirtualmachine
 
-This is a template repo for Terraform Azure Verified Modules.
+Terraform Azure Verified Resource Module to manage [Azure SQL Virtual Machine](https://learn.microsoft.com/en-us/azure/azure-sql/virtual-machines/windows/sql-server-on-azure-vm-iaas-what-is-overview) (`Microsoft.SqlVirtualMachine/sqlVirtualMachines`).
 
-Things to do:
+Azure SQL Virtual Machine enables you to use full versions of SQL Server in the cloud hosted on Windows Server virtual machines. Registering your SQL Server VM with the SQL IaaS Agent Extension unlocks features such as automated patching, automated backup, and simplified license management.
 
-1. Set up a GitHub repo environment called `test`.
-1. Configure environment protection rule to ensure that approval is required before deploying to this environment.
-1. Create a user-assigned managed identity in your test subscription.
-1. Create a role assignment for the managed identity on your test subscription, use the minimum required role.
-1. Configure federated identity credentials on the user assigned managed identity. Use the GitHub environment.
-1. Search and update TODOs within the code and remove the TODO comments once complete.
+## Features
 
-> [!IMPORTANT]
-> As the overall AVM framework is not GA (generally available) yet - the CI framework and test automation is not fully functional and implemented across all supported languages yet - breaking changes are expected, and additional customer feedback is yet to be gathered and incorporated. Hence, modules **MUST NOT** be published at version `1.0.0` or higher at this time.
-> 
-> All module **MUST** be published as a pre-release version (e.g., `0.1.0`, `0.1.1`, `0.2.0`, etc.) until the AVM framework becomes GA.
-> 
-> However, it is important to note that this **DOES NOT** mean that the modules cannot be consumed and utilized. They **CAN** be leveraged in all types of environments (dev, test, prod etc.). Consumers can treat them just like any other IaC module and raise issues or feature requests against them as they learn from the usage of the module. Consumers should also read the release notes for each version, if considering updating to a more recent version of a module to see if there are any considerations or breaking changes etc.
+This module supports the following capabilities:
+
+- **SQL Server License Types**: Configure Azure Hybrid Benefit (AHUB), Pay-As-You-Go (PAYG), or Disaster Recovery (DR) licensing.
+- **SQL Management Modes**: Full, LightWeight, or NoAgent management modes for different feature and overhead requirements.
+- **SQL Server Editions**: Support for Developer, Express, Standard, Enterprise, and Web SKUs.
+- **Managed Identities**: System-assigned and user-assigned managed identity support.
+- **Resource Locks**: CanNotDelete or ReadOnly locks to protect the resource.
+- **Role Assignments**: Azure RBAC role assignments directly on the SQL Virtual Machine resource.
+- **AVM Telemetry**: Optional telemetry to help improve Azure Verified Modules.
+
+## Prerequisites
+
+- An existing Azure Virtual Machine with SQL Server installed (from Azure Marketplace SQL Server images).
+- The VM must be running a supported Windows Server version.

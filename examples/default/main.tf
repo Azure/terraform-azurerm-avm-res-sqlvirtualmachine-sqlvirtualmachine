@@ -50,10 +50,10 @@ resource "azurerm_resource_group" "this" {
 
 # Create a virtual network and subnet for the example
 resource "azurerm_virtual_network" "this" {
-  address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.this.location
   name                = module.naming.virtual_network.name_unique
   resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
 }
 
 resource "azurerm_subnet" "this" {
@@ -90,7 +90,6 @@ resource "azurerm_windows_virtual_machine" "this" {
     caching              = "ReadWrite"
     storage_account_type = "Premium_LRS"
   }
-
   source_image_reference {
     offer     = "sql2019-ws2019"
     publisher = "MicrosoftSQLServer"
@@ -103,17 +102,14 @@ resource "azurerm_windows_virtual_machine" "this" {
 module "test" {
   source = "../../"
 
-  # source             = "Azure/avm-res-sqlvirtualmachine-sqlvirtualmachine/azurerm"
-  # version            = "~> 0.1"
-
-  enable_telemetry            = var.enable_telemetry
   location                    = azurerm_resource_group.this.location
   name                        = "${module.naming.mssql_server.name_unique}-sqlvm"
   resource_group_name         = azurerm_resource_group.this.name
   virtual_machine_resource_id = azurerm_windows_virtual_machine.this.id
-  sql_server_license_type     = "PAYG"
-  sql_management              = "Full"
-  sql_image_sku               = "Developer"
+  enable_telemetry            = var.enable_telemetry
   sql_image_offer             = "SQL2019-WS2019"
+  sql_image_sku               = "Developer"
+  sql_management              = "Full"
+  sql_server_license_type     = "PAYG"
 }
 

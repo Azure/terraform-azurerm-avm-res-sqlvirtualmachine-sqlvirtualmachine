@@ -1,3 +1,9 @@
+variable "availability_group_name" {
+  type        = string
+  description = "The name of the availability group."
+  nullable    = false
+}
+
 variable "name" {
   type        = string
   description = "The name of the Availability Group Listener."
@@ -14,27 +20,24 @@ variable "sql_virtual_machine_group_id" {
   nullable    = false
 }
 
-variable "availability_group_name" {
-  type        = string
-  description = "The name of the availability group."
-  nullable    = false
-}
-
-variable "port" {
-  type        = number
-  description = "The port on which the availability group listener will listen."
-  default     = 1433
-
-  validation {
-    condition     = var.port > 0 && var.port <= 65535
-    error_message = "The port must be between 1 and 65535."
-  }
+variable "availability_group_configuration" {
+  type = object({
+    replicas = optional(list(object({
+      sql_virtual_machine_instance_id = string
+      role                            = string
+      commit                          = optional(string)
+      failover                        = optional(string)
+      readable_secondary              = optional(string)
+    })))
+  })
+  default     = null
+  description = "Availability group configuration for replicas."
 }
 
 variable "create_default_availability_group_if_not_exist" {
   type        = bool
-  description = "Whether to create the default availability group if it does not exist."
   default     = false
+  description = "Whether to create the default availability group if it does not exist."
 }
 
 variable "load_balancer_configurations" {
@@ -48,20 +51,17 @@ variable "load_balancer_configurations" {
     public_ip_address_resource_id = optional(string)
     sql_virtual_machine_instances = list(string)
   }))
-  description = "Load balancer configurations for the availability group listener."
   default     = []
+  description = "Load balancer configurations for the availability group listener."
 }
 
-variable "availability_group_configuration" {
-  type = object({
-    replicas = optional(list(object({
-      sql_virtual_machine_instance_id = string
-      role                            = string
-      commit                          = optional(string)
-      failover                        = optional(string)
-      readable_secondary              = optional(string)
-    })))
-  })
-  description = "Availability group configuration for replicas."
-  default     = null
+variable "port" {
+  type        = number
+  default     = 1433
+  description = "The port on which the availability group listener will listen."
+
+  validation {
+    condition     = var.port > 0 && var.port <= 65535
+    error_message = "The port must be between 1 and 65535."
+  }
 }

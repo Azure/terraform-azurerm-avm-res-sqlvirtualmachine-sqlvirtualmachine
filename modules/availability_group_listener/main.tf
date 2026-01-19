@@ -11,10 +11,9 @@ terraform {
 
 # Availability Group Listener resource
 resource "azapi_resource" "this" {
-  type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachineGroups/availabilityGroupListeners@2023-10-01"
   name      = var.name
   parent_id = var.sql_virtual_machine_group_id
-
+  type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachineGroups/availabilityGroupListeners@2023-10-01"
   body = jsonencode({
     properties = {
       availabilityGroupName                    = var.availability_group_name

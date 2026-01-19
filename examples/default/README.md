@@ -9,6 +9,10 @@ terraform {
   required_version = "~> 1.5"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.4"
+    }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 3.74"
@@ -51,20 +55,71 @@ resource "azurerm_resource_group" "this" {
   name     = module.naming.resource_group.name_unique
 }
 
-# This is the module call
-# Do not specify location here due to the randomization above.
-# Leaving location as `null` will cause the module to use the resource group location
-# with a data source.
+# Create a virtual network and subnet for the example
+resource "azurerm_virtual_network" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.virtual_network.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+  address_space       = ["10.0.0.0/16"]
+}
+
+resource "azurerm_subnet" "this" {
+  address_prefixes     = ["10.0.1.0/24"]
+  name                 = "subnet-default"
+  resource_group_name  = azurerm_resource_group.this.name
+  virtual_network_name = azurerm_virtual_network.this.name
+}
+
+# Create a network interface for the VM
+resource "azurerm_network_interface" "this" {
+  location            = azurerm_resource_group.this.location
+  name                = module.naming.network_interface.name_unique
+  resource_group_name = azurerm_resource_group.this.name
+
+  ip_configuration {
+    name                          = "internal"
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = azurerm_subnet.this.id
+  }
+}
+
+# Create a Windows VM with SQL Server
+resource "azurerm_windows_virtual_machine" "this" {
+  admin_password        = "P@ssw0rd1234!"
+  admin_username        = "adminuser"
+  location              = azurerm_resource_group.this.location
+  name                  = module.naming.virtual_machine.name_unique
+  network_interface_ids = [azurerm_network_interface.this.id]
+  resource_group_name   = azurerm_resource_group.this.name
+  size                  = "Standard_D2s_v3"
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Premium_LRS"
+  }
+  source_image_reference {
+    offer     = "sql2019-ws2019"
+    publisher = "MicrosoftSQLServer"
+    sku       = "sqldev"
+    version   = "latest"
+  }
+}
+
+# This is the module call for SQL Virtual Machine
 module "test" {
   source = "../../"
 
-  # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
-  # ...
-  location            = azurerm_resource_group.this.location
-  name                = "TODO" # TODO update with module.naming.<RESOURCE_TYPE>.name_unique
-  resource_group_name = azurerm_resource_group.this.name
-  enable_telemetry    = var.enable_telemetry # see variables.tf
+  location                    = azurerm_resource_group.this.location
+  name                        = "${module.naming.mssql_server.name_unique}-sqlvm"
+  resource_group_name         = azurerm_resource_group.this.name
+  virtual_machine_resource_id = azurerm_windows_virtual_machine.this.id
+  enable_telemetry            = var.enable_telemetry
+  sql_image_offer             = "SQL2019-WS2019"
+  sql_image_sku               = "Developer"
+  sql_management              = "Full"
+  sql_server_license_type     = "PAYG"
 }
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -74,6 +129,8 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
 
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.4)
+
 - <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
@@ -82,7 +139,11 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
+- [azurerm_network_interface.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_interface) (resource)
 - [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_subnet.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_windows_virtual_machine.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->

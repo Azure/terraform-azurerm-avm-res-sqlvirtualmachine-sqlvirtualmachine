@@ -1,3 +1,9 @@
+variable "location" {
+  type        = string
+  description = "Azure region where the resource should be deployed."
+  nullable    = false
+}
+
 variable "name" {
   type        = string
   description = "The name of the SQL Virtual Machine Group."
@@ -8,21 +14,9 @@ variable "name" {
   }
 }
 
-variable "location" {
-  type        = string
-  description = "Azure region where the resource should be deployed."
-  nullable    = false
-}
-
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
-  nullable    = false
-}
-
-variable "subscription_id" {
-  type        = string
-  description = "The subscription ID where the resource will be deployed."
   nullable    = false
 }
 
@@ -43,6 +37,18 @@ variable "sql_image_sku" {
   }
 }
 
+variable "subscription_id" {
+  type        = string
+  description = "The subscription ID where the resource will be deployed."
+  nullable    = false
+}
+
+variable "tags" {
+  type        = map(string)
+  default     = null
+  description = "(Optional) Tags of the resource."
+}
+
 variable "wsfc_domain_profile" {
   type = object({
     domain_fqdn                 = string
@@ -55,12 +61,6 @@ variable "wsfc_domain_profile" {
     file_share_witness_path     = optional(string)
     cluster_subnet_type         = optional(string)
   })
+  default     = null
   description = "Windows Server Failover Cluster domain profile configuration."
-  default     = null
-}
-
-variable "tags" {
-  type        = map(string)
-  default     = null
-  description = "(Optional) Tags of the resource."
 }

@@ -1,3 +1,5 @@
+# SQL Virtual Machine specific variables
+
 variable "location" {
   type        = string
   description = "Azure region where the resource should be deployed."
@@ -18,6 +20,12 @@ variable "name" {
 variable "resource_group_name" {
   type        = string
   description = "The resource group where the resources will be deployed."
+}
+
+variable "virtual_machine_resource_id" {
+  type        = string
+  description = "The resource ID of the Azure Virtual Machine that this SQL Virtual Machine will be associated with."
+  nullable    = false
 }
 
 # required AVM interfaces
@@ -160,47 +168,16 @@ DESCRIPTION
   nullable    = false
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "tags" {
-  type        = map(string)
+variable "sql_image_offer" {
+  type        = string
   default     = null
-  description = "(Optional) Tags of the resource."
-}
-
-# SQL Virtual Machine specific variables
-
-variable "virtual_machine_resource_id" {
-  type        = string
-  description = "The resource ID of the Azure Virtual Machine that this SQL Virtual Machine will be associated with."
-  nullable    = false
-}
-
-variable "sql_server_license_type" {
-  type        = string
-  description = "The SQL Server license type. Possible values are 'AHUB' (Azure Hybrid Benefit), 'PAYG' (Pay-As-You-Go), and 'DR' (Disaster Recovery)."
-  default     = "PAYG"
-
-  validation {
-    condition     = contains(["AHUB", "PAYG", "DR"], var.sql_server_license_type)
-    error_message = "The sql_server_license_type must be one of: 'AHUB', 'PAYG', or 'DR'."
-  }
-}
-
-variable "sql_management" {
-  type        = string
-  description = "The SQL Server management mode. Possible values are 'Full', 'LightWeight', and 'NoAgent'."
-  default     = "Full"
-
-  validation {
-    condition     = contains(["Full", "LightWeight", "NoAgent"], var.sql_management)
-    error_message = "The sql_management must be one of: 'Full', 'LightWeight', or 'NoAgent'."
-  }
+  description = "The SQL Server image offer. Possible values include 'SQL2019-WS2019', 'SQL2017-WS2019', 'SQL2016SP2-WS2019', etc."
 }
 
 variable "sql_image_sku" {
   type        = string
-  description = "The SQL Server image SKU. Possible values include 'Developer', 'Express', 'Standard', 'Enterprise', 'Web'."
   default     = null
+  description = "The SQL Server image SKU. Possible values include 'Developer', 'Express', 'Standard', 'Enterprise', 'Web'."
 
   validation {
     condition     = var.sql_image_sku == null || contains(["Developer", "Express", "Standard", "Enterprise", "Web"], var.sql_image_sku)
@@ -208,8 +185,31 @@ variable "sql_image_sku" {
   }
 }
 
-variable "sql_image_offer" {
+variable "sql_management" {
   type        = string
-  description = "The SQL Server image offer. Possible values include 'SQL2019-WS2019', 'SQL2017-WS2019', 'SQL2016SP2-WS2019', etc."
+  default     = "Full"
+  description = "The SQL Server management mode. Possible values are 'Full', 'LightWeight', and 'NoAgent'."
+
+  validation {
+    condition     = contains(["Full", "LightWeight", "NoAgent"], var.sql_management)
+    error_message = "The sql_management must be one of: 'Full', 'LightWeight', or 'NoAgent'."
+  }
+}
+
+variable "sql_server_license_type" {
+  type        = string
+  default     = "PAYG"
+  description = "The SQL Server license type. Possible values are 'AHUB' (Azure Hybrid Benefit), 'PAYG' (Pay-As-You-Go), and 'DR' (Disaster Recovery)."
+
+  validation {
+    condition     = contains(["AHUB", "PAYG", "DR"], var.sql_server_license_type)
+    error_message = "The sql_server_license_type must be one of: 'AHUB', 'PAYG', or 'DR'."
+  }
+}
+
+# tflint-ignore: terraform_unused_declarations
+variable "tags" {
+  type        = map(string)
   default     = null
+  description = "(Optional) Tags of the resource."
 }

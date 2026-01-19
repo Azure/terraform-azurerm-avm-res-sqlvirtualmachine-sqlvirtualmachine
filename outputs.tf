@@ -1,3 +1,8 @@
+output "name" {
+  description = "The name of the SQL Virtual Machine."
+  value       = azapi_resource.this.name
+}
+
 # Module owners should include the full resource via a 'resource' output
 # https://azure.github.io/Azure-Verified-Modules/specs/terraform/#id-tffr2---category-outputs---additional-terraform-outputs
 output "resource" {
@@ -8,9 +13,4 @@ output "resource" {
 output "resource_id" {
   description = "The resource ID of the SQL Virtual Machine."
   value       = azapi_resource.this.id
-}
-
-output "name" {
-  description = "The name of the SQL Virtual Machine."
-  value       = azapi_resource.this.name
 }
