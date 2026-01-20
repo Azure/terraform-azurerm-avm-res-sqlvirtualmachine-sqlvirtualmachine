@@ -48,9 +48,10 @@ A map describing customer-managed keys to associate with the resource. This incl
 - `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
 - `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
   - `resource_id` - The resource ID of the user-assigned identity.
-DESCRIPTION  
+DESCRIPTION
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "diagnostic_settings" {
   type = map(object({
     name                                     = optional(string, null)
@@ -78,7 +79,7 @@ A map of diagnostic settings to create on the Key Vault. The map key is delibera
 - `event_hub_authorization_rule_resource_id` - (Optional) The resource ID of the event hub authorization rule to send logs and metrics to.
 - `event_hub_name` - (Optional) The name of the event hub. If none is specified, the default event hub will be selected.
 - `marketplace_partner_resource_id` - (Optional) The full ARM resource ID of the Marketplace resource to which you would like to send Diagnostic LogsLogs.
-DESCRIPTION  
+DESCRIPTION
   nullable    = false
 
   validation {
@@ -151,6 +152,7 @@ variable "role_assignments" {
     condition                              = optional(string, null)
     condition_version                      = optional(string, null)
     delegated_managed_identity_resource_id = optional(string, null)
+    principal_type                         = optional(string, null)
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -162,6 +164,7 @@ A map of role assignments to create on this resource. The map key is deliberatel
 - `skip_service_principal_aad_check` - If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
 - `condition` - The condition which will be used to scope the role assignment.
 - `condition_version` - The version of the condition syntax. Valid values are '2.0'.
+- `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`.
 
 > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
 DESCRIPTION
