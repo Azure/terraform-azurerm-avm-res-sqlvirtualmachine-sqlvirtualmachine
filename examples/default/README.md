@@ -127,6 +127,7 @@ resource "azapi_resource" "windows_virtual_machine" {
   parent_id = azapi_resource.resource_group.id
   type      = "Microsoft.Compute/virtualMachines@2024-03-01"
   body = {
+    zones = ["1"]
     properties = {
       hardwareProfile = {
         vmSize = "Standard_D2s_v3"
