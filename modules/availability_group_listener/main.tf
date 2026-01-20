@@ -1,20 +1,10 @@
-terraform {
-  required_version = "~> 1.5"
-
-  required_providers {
-    azapi = {
-      source  = "Azure/azapi"
-      version = "~> 2.4"
-    }
-  }
-}
-
 # Availability Group Listener resource
 resource "azapi_resource" "this" {
   name      = var.name
   parent_id = var.sql_virtual_machine_group_id
   type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachineGroups/availabilityGroupListeners@2023-10-01"
-  body = jsonencode({
+
+  body = {
     properties = {
       availabilityGroupName                    = var.availability_group_name
       port                                     = var.port
@@ -22,5 +12,5 @@ resource "azapi_resource" "this" {
       loadBalancerConfigurations               = var.load_balancer_configurations
       availabilityGroupConfiguration           = var.availability_group_configuration
     }
-  })
+  }
 }
