@@ -111,8 +111,19 @@ resource "azapi_resource" "this" {
           weeklyInterval    = var.assessment_settings.schedule.weekly_interval
         } : null
       } : null
-      enableAutomaticUpgrade = var.enable_automatic_upgrade
-      leastPrivilegeMode     = var.least_privilege_mode
+      enableAutomaticUpgrade           = var.enable_automatic_upgrade
+      leastPrivilegeMode               = var.least_privilege_mode
+      sqlVirtualMachineGroupResourceId = var.sql_virtual_machine_group_resource_id
+      virtualMachineIdentitySettings = var.virtual_machine_identity_settings != null ? {
+        type       = var.virtual_machine_identity_settings.type
+        resourceId = var.virtual_machine_identity_settings.resource_id
+      } : null
+      wsfcDomainCredentials = var.wsfc_domain_credentials != null ? {
+        clusterBootstrapAccountPassword = var.wsfc_domain_credentials.cluster_bootstrap_account_password
+        clusterOperatorAccountPassword  = var.wsfc_domain_credentials.cluster_operator_account_password
+        sqlServiceAccountPassword       = var.wsfc_domain_credentials.sql_service_account_password
+      } : null
+      wsfcStaticIp = var.wsfc_static_ip
     }
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null

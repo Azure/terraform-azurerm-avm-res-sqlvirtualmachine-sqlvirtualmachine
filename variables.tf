@@ -453,6 +453,49 @@ variable "least_privilege_mode" {
   }
 }
 
+variable "sql_virtual_machine_group_resource_id" {
+  type        = string
+  default     = null
+  description = "ARM resource id of the SQL virtual machine group this SQL virtual machine is or will be part of. Used for Always On Availability Groups."
+}
+
+variable "virtual_machine_identity_settings" {
+  type = object({
+    type        = optional(string)
+    resource_id = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Identity settings for the virtual machine. Used to configure managed identity for SQL VM.
+
+- `type` - (Optional) Identity type of the virtual machine. Possible values: 'None', 'SystemAssigned', 'UserAssigned'.
+- `resource_id` - (Optional) ARM Resource Id of the identity. Only required when UserAssigned identity is selected.
+DESCRIPTION
+}
+
+variable "wsfc_domain_credentials" {
+  type = object({
+    cluster_bootstrap_account_password = optional(string)
+    cluster_operator_account_password  = optional(string)
+    sql_service_account_password       = optional(string)
+  })
+  default     = null
+  sensitive   = true
+  description = <<DESCRIPTION
+Windows Server Failover Cluster domain credentials. Used for Always On Availability Groups.
+
+- `cluster_bootstrap_account_password` - (Optional) Cluster bootstrap account password.
+- `cluster_operator_account_password` - (Optional) Cluster operator account password.
+- `sql_service_account_password` - (Optional) SQL service account password.
+DESCRIPTION
+}
+
+variable "wsfc_static_ip" {
+  type        = string
+  default     = null
+  description = "Domain credentials for setting up Windows Server Failover Cluster for SQL availability group."
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)
