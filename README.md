@@ -82,6 +82,103 @@ Type: `string`
 
 The following input variables are optional (have default values):
 
+### <a name="input_assessment_settings"></a> [assessment\_settings](#input\_assessment\_settings)
+
+Description: SQL best practices assessment settings for the SQL Virtual Machine.
+
+- `enable` - (Optional) Enable or disable SQL best practices Assessment feature on SQL virtual machine.
+- `run_immediately` - (Optional) Run SQL best practices Assessment immediately on SQL virtual machine.
+- `schedule` - (Optional) Schedule for the assessment:
+  - `day_of_week` - Day of the week to run assessment. Possible values: 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'.
+  - `enable` - Enable or disable assessment schedule on SQL virtual machine.
+  - `monthly_occurrence` - Occurrence of the DayOfWeek day within a month to schedule assessment. Takes values: 1,2,3,4 and -1. Use -1 for last DayOfWeek day of the month.
+  - `start_time` - Time of the day in HH:mm format. Eg. 17:30.
+  - `weekly_interval` - Number of weeks to schedule between 2 assessment runs. Takes value from 1-6.
+
+Type:
+
+```hcl
+object({
+    enable          = optional(bool)
+    run_immediately = optional(bool)
+    schedule = optional(object({
+      day_of_week        = optional(string)
+      enable             = optional(bool)
+      monthly_occurrence = optional(number)
+      start_time         = optional(string)
+      weekly_interval    = optional(number)
+    }))
+  })
+```
+
+Default: `null`
+
+### <a name="input_auto_backup_settings"></a> [auto\_backup\_settings](#input\_auto\_backup\_settings)
+
+Description: Automated backup settings for the SQL Virtual Machine.
+
+- `enable` - (Required) Enable or disable autobackup on SQL virtual machine.
+- `backup_schedule_type` - (Optional) Backup schedule type. Possible values: 'Manual', 'Automated'.
+- `backup_system_dbs` - (Optional) Include or exclude system databases from auto backup.
+- `days_of_week` - (Optional) Days of the week for the backups when full\_backup\_frequency is set to Weekly.
+- `enable_encryption` - (Optional) Enable or disable encryption for backup on SQL virtual machine.
+- `full_backup_frequency` - (Optional) Frequency of full backups. Possible values: 'Daily', 'Weekly'.
+- `full_backup_start_time` - (Optional) Start time of a given day during which full backups can take place. 0-23 hours.
+- `full_backup_window_hours` - (Optional) Duration of the time window of a given day during which full backups can take place. 1-23 hours.
+- `log_backup_frequency` - (Optional) Frequency of log backups. 5-60 minutes.
+- `password` - (Optional) Password for encryption on backup. This is a write-only property.
+- `retention_period` - (Optional) Retention period of backup: 1-90 days.
+- `storage_access_key` - (Optional) Storage account key where backup will be taken to. This is a write-only property.
+- `storage_account_url` - (Optional) Storage account url where backup will be taken to.
+- `storage_container_name` - (Optional) Storage container name where backup will be taken to.
+
+Type:
+
+```hcl
+object({
+    enable                   = bool
+    backup_schedule_type     = optional(string)
+    backup_system_dbs        = optional(bool)
+    days_of_week             = optional(list(string))
+    enable_encryption        = optional(bool)
+    full_backup_frequency    = optional(string)
+    full_backup_start_time   = optional(number)
+    full_backup_window_hours = optional(number)
+    log_backup_frequency     = optional(number)
+    password                 = optional(string)
+    retention_period         = optional(number)
+    storage_access_key       = optional(string)
+    storage_account_url      = optional(string)
+    storage_container_name   = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_auto_patching_settings"></a> [auto\_patching\_settings](#input\_auto\_patching\_settings)
+
+Description: Automated patching settings for the SQL Virtual Machine.
+
+- `enable` - (Required) Enable or disable autopatching on SQL virtual machine.
+- `day_of_week` - (Optional) Day of week to apply the patch on. Possible values: 'Everyday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'.
+- `maintenance_window_duration` - (Optional) Duration of patching in minutes.
+- `maintenance_window_starting_hour` - (Optional) Hour of the day when patching is initiated. Local VM time. 0-23.
+- `additional_vm_patch` - (Optional) Additional Patch to be enabled on the SQL Virtual Machine. Possible values: 'NotSet', 'MicrosoftUpdate'.
+
+Type:
+
+```hcl
+object({
+    enable                           = bool
+    day_of_week                      = optional(string)
+    maintenance_window_duration      = optional(number)
+    maintenance_window_starting_hour = optional(number)
+    additional_vm_patch              = optional(string)
+  })
+```
+
+Default: `null`
+
 ### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
 
 Description: A map describing customer-managed keys to associate with the resource. This includes the following properties:
@@ -140,6 +237,14 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_enable_automatic_upgrade"></a> [enable\_automatic\_upgrade](#input\_enable\_automatic\_upgrade)
+
+Description: Enable automatic upgrade of SQL IaaS extension Agent.
+
+Type: `bool`
+
+Default: `null`
+
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
 Description: This variable controls whether or not telemetry is enabled for the module.  
@@ -149,6 +254,38 @@ If it is set to false, then no telemetry will be collected.
 Type: `bool`
 
 Default: `true`
+
+### <a name="input_key_vault_credential_settings"></a> [key\_vault\_credential\_settings](#input\_key\_vault\_credential\_settings)
+
+Description: Azure Key Vault integration settings for the SQL Virtual Machine. This allows SQL Server to connect to Azure Key Vault.
+
+- `enable` - (Required) Enable or disable Key Vault credential setting.
+- `azure_key_vault_url` - (Optional) Azure Key Vault URL (e.g., https://myvault.vault.azure.net/).
+- `credential_name` - (Optional) Credential name to store in SQL Server.
+- `service_principal_name` - (Optional) Service principal name (Application/Client ID) to access Key Vault.
+- `service_principal_secret` - (Optional) Service principal secret to access Key Vault. This is a write-only property.
+
+Type:
+
+```hcl
+object({
+    enable                   = bool
+    azure_key_vault_url      = optional(string)
+    credential_name          = optional(string)
+    service_principal_name   = optional(string)
+    service_principal_secret = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_least_privilege_mode"></a> [least\_privilege\_mode](#input\_least\_privilege\_mode)
+
+Description: SQL IaaS Agent least privilege mode. Possible values are 'Enabled' and 'NotSet'.
+
+Type: `string`
+
+Default: `null`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
@@ -217,6 +354,72 @@ map(object({
 
 Default: `{}`
 
+### <a name="input_server_configurations_management_settings"></a> [server\_configurations\_management\_settings](#input\_server\_configurations\_management\_settings)
+
+Description: Server configurations management settings for the SQL Virtual Machine.
+
+- `additional_features_server_configurations` - Additional features server configurations:
+  - `is_r_services_enabled` - Enable or disable R services (SQL 2016 onwards).
+- `azure_ad_authentication_settings` - Azure AD/Entra authentication settings:
+  - `client_id` - The client Id of the Managed Identity to query Microsoft Graph API. Empty string for system assigned.
+- `sql_connectivity_update_settings` - SQL connectivity update settings:
+  - `connectivity_type` - SQL Server connectivity option. Possible values: 'LOCAL', 'PRIVATE', 'PUBLIC'.
+  - `port` - SQL Server port.
+  - `sql_auth_update_password` - SQL Server sysadmin login password. Write-only.
+  - `sql_auth_update_user_name` - SQL Server sysadmin login to create. Write-only.
+- `sql_instance_settings` - SQL instance settings:
+  - `collation` - SQL Server Collation.
+  - `is_ifi_enabled` - SQL Server IFI (Instant File Initialization).
+  - `is_lpim_enabled` - SQL Server LPIM (Lock Pages in Memory).
+  - `is_optimize_for_ad_hoc_workloads_enabled` - SQL Server Optimize for Adhoc workloads.
+  - `max_dop` - SQL Server MAXDOP.
+  - `max_server_memory_mb` - SQL Server maximum memory.
+  - `min_server_memory_mb` - SQL Server minimum memory.
+- `sql_storage_update_settings` - SQL storage update settings:
+  - `disk_configuration_type` - Disk configuration to apply. Possible values: 'NEW', 'EXTEND', 'ADD'.
+  - `disk_count` - Virtual machine disk count.
+  - `starting_device_id` - Device id of the first disk to be updated.
+- `sql_workload_type_update_settings` - SQL workload type update settings:
+  - `sql_workload_type` - SQL Server workload type. Possible values: 'GENERAL', 'OLTP', 'DW'.
+
+Type:
+
+```hcl
+object({
+    additional_features_server_configurations = optional(object({
+      is_r_services_enabled = optional(bool)
+    }))
+    azure_ad_authentication_settings = optional(object({
+      client_id = optional(string)
+    }))
+    sql_connectivity_update_settings = optional(object({
+      connectivity_type         = optional(string)
+      port                      = optional(number)
+      sql_auth_update_password  = optional(string)
+      sql_auth_update_user_name = optional(string)
+    }))
+    sql_instance_settings = optional(object({
+      collation                                = optional(string)
+      is_ifi_enabled                           = optional(bool)
+      is_lpim_enabled                          = optional(bool)
+      is_optimize_for_ad_hoc_workloads_enabled = optional(bool)
+      max_dop                                  = optional(number)
+      max_server_memory_mb                     = optional(number)
+      min_server_memory_mb                     = optional(number)
+    }))
+    sql_storage_update_settings = optional(object({
+      disk_configuration_type = optional(string)
+      disk_count              = optional(number)
+      starting_device_id      = optional(number)
+    }))
+    sql_workload_type_update_settings = optional(object({
+      sql_workload_type = optional(string)
+    }))
+  })
+```
+
+Default: `null`
+
 ### <a name="input_sql_image_offer"></a> [sql\_image\_offer](#input\_sql\_image\_offer)
 
 Description: The SQL Server image offer. Possible values include 'SQL2019-WS2019', 'SQL2017-WS2019', 'SQL2016SP2-WS2019', etc.
@@ -249,11 +452,128 @@ Type: `string`
 
 Default: `"PAYG"`
 
+### <a name="input_sql_virtual_machine_group_resource_id"></a> [sql\_virtual\_machine\_group\_resource\_id](#input\_sql\_virtual\_machine\_group\_resource\_id)
+
+Description: ARM resource id of the SQL virtual machine group this SQL virtual machine is or will be part of. Used for Always On Availability Groups.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_storage_configuration_settings"></a> [storage\_configuration\_settings](#input\_storage\_configuration\_settings)
+
+Description: Storage configuration settings for the SQL Virtual Machine.
+
+- `disk_configuration_type` - (Optional) Disk configuration type. Possible values: 'NEW', 'EXTEND', 'ADD'.
+- `storage_workload_type` - (Optional) Storage workload type. Possible values: 'GENERAL', 'OLTP', 'DW'.
+- `sql_system_db_on_data_disk` - (Optional) SQL Server SystemDb Storage on DataPool if true.
+- `enable_storage_config_blade` - (Optional) Enable SQL IaaS Agent storage configuration blade in Azure Portal. Write-only.
+- `sql_data_settings` - (Optional) SQL Server data settings:
+  - `default_file_path` - SQL Server default data file path.
+  - `luns` - Logical Unit Numbers for the disks.
+  - `use_storage_pool` - Use storage pool to build a drive if true.
+- `sql_log_settings` - (Optional) SQL Server log settings:
+  - `default_file_path` - SQL Server default log file path.
+  - `luns` - Logical Unit Numbers for the disks.
+  - `use_storage_pool` - Use storage pool to build a drive if true.
+- `sql_temp_db_settings` - (Optional) SQL Server TempDB settings:
+  - `data_file_count` - SQL Server tempdb data file count.
+  - `data_file_size` - SQL Server tempdb data file size in MB.
+  - `data_growth` - SQL Server tempdb data file autoGrowth size in MB.
+  - `default_file_path` - SQL Server default tempdb file path.
+  - `log_file_size` - SQL Server tempdb log file size in MB.
+  - `log_growth` - SQL Server tempdb log file autoGrowth size in MB.
+  - `luns` - Logical Unit Numbers for the disks.
+  - `persist_folder` - SQL Server tempdb persist folder choice.
+  - `persist_folder_path` - SQL Server tempdb persist folder location.
+  - `use_storage_pool` - Use storage pool to build a drive if true.
+
+Type:
+
+```hcl
+object({
+    disk_configuration_type     = optional(string)
+    storage_workload_type       = optional(string)
+    sql_system_db_on_data_disk  = optional(bool)
+    enable_storage_config_blade = optional(bool)
+    sql_data_settings = optional(object({
+      default_file_path = optional(string)
+      luns              = optional(list(number))
+      use_storage_pool  = optional(bool)
+    }))
+    sql_log_settings = optional(object({
+      default_file_path = optional(string)
+      luns              = optional(list(number))
+      use_storage_pool  = optional(bool)
+    }))
+    sql_temp_db_settings = optional(object({
+      data_file_count     = optional(number)
+      data_file_size      = optional(number)
+      data_growth         = optional(number)
+      default_file_path   = optional(string)
+      log_file_size       = optional(number)
+      log_growth          = optional(number)
+      luns                = optional(list(number))
+      persist_folder      = optional(bool)
+      persist_folder_path = optional(string)
+      use_storage_pool    = optional(bool)
+    }))
+  })
+```
+
+Default: `null`
+
 ### <a name="input_tags"></a> [tags](#input\_tags)
 
 Description: (Optional) Tags of the resource.
 
 Type: `map(string)`
+
+Default: `null`
+
+### <a name="input_virtual_machine_identity_settings"></a> [virtual\_machine\_identity\_settings](#input\_virtual\_machine\_identity\_settings)
+
+Description: Identity settings for the virtual machine. Used to configure managed identity for SQL VM.
+
+- `type` - (Optional) Identity type of the virtual machine. Possible values: 'None', 'SystemAssigned', 'UserAssigned'.
+- `resource_id` - (Optional) ARM Resource Id of the identity. Only required when UserAssigned identity is selected.
+
+Type:
+
+```hcl
+object({
+    type        = optional(string)
+    resource_id = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_wsfc_domain_credentials"></a> [wsfc\_domain\_credentials](#input\_wsfc\_domain\_credentials)
+
+Description: Windows Server Failover Cluster domain credentials. Used for Always On Availability Groups.
+
+- `cluster_bootstrap_account_password` - (Optional) Cluster bootstrap account password.
+- `cluster_operator_account_password` - (Optional) Cluster operator account password.
+- `sql_service_account_password` - (Optional) SQL service account password.
+
+Type:
+
+```hcl
+object({
+    cluster_bootstrap_account_password = optional(string)
+    cluster_operator_account_password  = optional(string)
+    sql_service_account_password       = optional(string)
+  })
+```
+
+Default: `null`
+
+### <a name="input_wsfc_static_ip"></a> [wsfc\_static\_ip](#input\_wsfc\_static\_ip)
+
+Description: Domain credentials for setting up Windows Server Failover Cluster for SQL availability group.
+
+Type: `string`
 
 Default: `null`
 
