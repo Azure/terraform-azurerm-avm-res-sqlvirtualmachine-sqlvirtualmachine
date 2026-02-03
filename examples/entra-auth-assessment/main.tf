@@ -238,11 +238,29 @@ resource "azapi_resource" "windows_virtual_machine" {
   }
 
   identity {
-    type = "UserAssigned"
+    type = "SystemAssigned, UserAssigned"
     identity_ids = [
       azapi_resource.user_assigned_identity.id
     ]
   }
+}
+
+# Install the AADLoginForWindows extension to enable Microsoft Entra sign-in to the VM
+# This allows users to RDP to the VM using their Entra ID credentials
+# Reference: https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-windows
+resource "azapi_resource" "aad_login_extension" {
+  name      = "AADLoginForWindows"
+  parent_id = azapi_resource.windows_virtual_machine.id
+  type      = "Microsoft.Compute/virtualMachines/extensions@2024-03-01"
+  body = {
+    properties = {
+      publisher               = "Microsoft.Azure.ActiveDirectory"
+      type                    = "AADLoginForWindows"
+      typeHandlerVersion      = "2.0"
+      autoUpgradeMinorVersion = true
+    }
+  }
+  location = azapi_resource.resource_group.location
 }
 
 # This is the module call for SQL Virtual Machine with Microsoft Entra auth and Assessment

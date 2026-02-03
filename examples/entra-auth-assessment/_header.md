@@ -23,9 +23,15 @@ This example demonstrates how to configure:
 
 ## Features Demonstrated
 
-### Microsoft Entra Authentication
-- Uses a user-assigned managed identity for Entra ID authentication
-- Enables Windows authentication with Entra ID credentials
+### Microsoft Entra VM Sign-in (AADLoginForWindows Extension)
+- Installs the `AADLoginForWindows` VM extension to enable Entra ID sign-in to the VM
+- Allows users to RDP to the VM using their Entra ID credentials
+- Requires SystemAssigned managed identity on the VM
+- Reference: [Microsoft Entra sign-in for Windows VMs](https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-windows)
+
+### Microsoft Entra SQL Server Authentication
+- Uses a user-assigned managed identity for SQL Server Entra ID authentication
+- Enables SQL connections with Entra ID credentials
 - Configured via `server_configurations_management_settings.azure_ad_authentication_settings`
 - **Must be enabled after initial provisioning** (see limitation above)
 
