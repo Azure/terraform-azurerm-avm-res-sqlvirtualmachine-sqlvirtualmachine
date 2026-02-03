@@ -20,8 +20,9 @@ This example demonstrates how to configure:
 - Configured via `server_configurations_management_settings.azure_ad_authentication_settings`
 
 ### Azure Key Vault Integration
-- Creates an Azure Key Vault with access policies for the managed identity
-- Enables SQL Server credential for Key Vault access
+- Creates an Azure Key Vault with access policies for the managed identity and service principal
+- Creates an Azure AD application and service principal for SQL Server to access Key Vault
+- Service principal password is write-only and not stored in Terraform state
 - Configured via `key_vault_credential_settings`
 - Supports TDE (Transparent Data Encryption) with customer-managed keys
 

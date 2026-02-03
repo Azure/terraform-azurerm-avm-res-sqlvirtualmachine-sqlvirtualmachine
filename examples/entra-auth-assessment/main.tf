@@ -6,6 +6,14 @@ terraform {
       source  = "Azure/azapi"
       version = "~> 2.4"
     }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 3.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
@@ -14,6 +22,12 @@ terraform {
 }
 
 provider "azapi" {}
+
+provider "azuread" {}
+
+provider "azurerm" {
+  features {}
+}
 
 ## Section to provide a random Azure region for the resource group
 module "regions" {
@@ -110,36 +124,65 @@ resource "azapi_resource" "user_assigned_identity" {
   type      = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
 }
 
-# Create a Key Vault for SQL Server integration
-resource "azapi_resource" "key_vault" {
-  location  = azapi_resource.resource_group.location
-  name      = module.naming.key_vault.name_unique
-  parent_id = azapi_resource.resource_group.id
-  type      = "Microsoft.KeyVault/vaults@2023-07-01"
-  body = {
-    properties = {
-      sku = {
-        family = "A"
-        name   = "standard"
-      }
-      tenantId                     = data.azapi_client_config.current.tenant_id
-      enabledForDeployment         = true
-      enabledForTemplateDeployment = true
-      enableSoftDelete             = true
-      softDeleteRetentionInDays    = 7
-      accessPolicies = [
-        {
-          tenantId = data.azapi_client_config.current.tenant_id
-          objectId = azapi_resource.user_assigned_identity.output.properties.principalId
-          permissions = {
-            keys    = ["Get", "List", "WrapKey", "UnwrapKey"]
-            secrets = ["Get", "List"]
-          }
-        }
-      ]
-    }
+# Create an Azure AD Application and Service Principal for Key Vault integration
+resource "azuread_application" "keyvault_sp" {
+  display_name = "sql-kv-integration-${module.naming.unique-seed}"
+}
+
+resource "azuread_service_principal" "keyvault_sp" {
+  client_id = azuread_application.keyvault_sp.client_id
+}
+
+# Create a service principal password for Key Vault access
+# The password value is write-only and ephemeral - it can only be used during apply
+resource "azuread_application_password" "keyvault_sp" {
+  application_id = azuread_application.keyvault_sp.id
+  display_name   = "SQL Key Vault Integration"
+  end_date       = timeadd(timestamp(), "8760h") # 1 year from now
+
+  lifecycle {
+    ignore_changes = [end_date]
   }
-  response_export_values = ["properties.vaultUri"]
+}
+
+# Create a Key Vault for SQL Server integration (using azurerm for better integration)
+resource "azurerm_key_vault" "this" {
+  location                   = azapi_resource.resource_group.location
+  name                       = module.naming.key_vault.name_unique
+  resource_group_name        = azapi_resource.resource_group.name
+  sku_name                   = "standard"
+  tenant_id                  = data.azapi_client_config.current.tenant_id
+  rbac_authorization_enabled = false
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = false
+}
+
+# Access policy for the user-assigned identity (SQL Server)
+resource "azurerm_key_vault_access_policy" "sql_identity" {
+  key_vault_id = azurerm_key_vault.this.id
+  tenant_id    = data.azapi_client_config.current.tenant_id
+  object_id    = azapi_resource.user_assigned_identity.output.properties.principalId
+
+  key_permissions = [
+    "Get", "List", "WrapKey", "UnwrapKey"
+  ]
+  secret_permissions = [
+    "Get", "List"
+  ]
+}
+
+# Access policy for the Key Vault service principal
+resource "azurerm_key_vault_access_policy" "keyvault_sp" {
+  key_vault_id = azurerm_key_vault.this.id
+  tenant_id    = data.azapi_client_config.current.tenant_id
+  object_id    = azuread_service_principal.keyvault_sp.object_id
+
+  key_permissions = [
+    "Get", "List", "WrapKey", "UnwrapKey"
+  ]
+  secret_permissions = [
+    "Get", "List"
+  ]
 }
 
 data "azapi_client_config" "current" {}
@@ -180,7 +223,7 @@ resource "azapi_resource" "windows_virtual_machine" {
         imageReference = {
           publisher = "MicrosoftSQLServer"
           offer     = "sql2022-ws2022"
-          sku       = "sqldev"
+          sku       = "sqldev-gen2"
           version   = "latest"
         }
         osDisk = {
@@ -225,19 +268,19 @@ module "test" {
   # Enable automatic upgrade for SQL IaaS Agent
   enable_automatic_upgrade = true
   enable_telemetry         = var.enable_telemetry
-  # Azure Key Vault integration settings
-  # Allows SQL Server to connect to Azure Key Vault for encryption keys and secrets
+  # Azure Key Vault integration using the service principal credentials
+  # The service principal password is write-only and ephemeral
   key_vault_credential_settings = {
-    enable              = true
-    azure_key_vault_url = azapi_resource.key_vault.output.properties.vaultUri
-    credential_name     = "SqlKeyVaultCredential"
-    # Note: In production, use a service principal or managed identity
-    # service_principal_name and service_principal_secret would be set here
+    enable                   = true
+    azure_key_vault_url      = azurerm_key_vault.this.vault_uri
+    credential_name          = "SqlKeyVaultCredential"
+    service_principal_name   = azuread_application.keyvault_sp.client_id
+    service_principal_secret = azuread_application_password.keyvault_sp.value
   }
   # Enable least privilege mode for better security
   least_privilege_mode = "Enabled"
   # Reference the user-assigned identity from the underlying VM for SQL Server to use
-  # This is used for Microsoft Entra authentication and Key Vault integration
+  # This is used for Microsoft Entra authentication
   virtual_machine_identity_settings = {
     type        = "UserAssigned"
     resource_id = azapi_resource.user_assigned_identity.id
