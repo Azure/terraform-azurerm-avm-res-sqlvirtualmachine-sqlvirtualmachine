@@ -133,12 +133,14 @@ resource "azapi_resource" "this" {
   tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
+  # Note: SQL Virtual Machine only supports SystemAssigned identity at the resource level.
+  # User-assigned identities should be configured on the underlying VM and referenced via
+  # virtual_machine_identity_settings in the body properties.
   dynamic "identity" {
-    for_each = local.managed_identities.system_assigned_user_assigned
+    for_each = var.managed_identities.system_assigned ? { this = { type = "SystemAssigned" } } : {}
 
     content {
-      type         = identity.value.type
-      identity_ids = identity.value.user_assigned_resource_ids
+      type = identity.value.type
     }
   }
 }

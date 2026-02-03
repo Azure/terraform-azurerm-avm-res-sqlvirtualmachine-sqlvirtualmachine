@@ -236,9 +236,11 @@ module "test" {
   }
   # Enable least privilege mode for better security
   least_privilege_mode = "Enabled"
-  # Assign the user-assigned identity to the SQL VM
-  managed_identities = {
-    user_assigned_resource_ids = [azapi_resource.user_assigned_identity.id]
+  # Reference the user-assigned identity from the underlying VM for SQL Server to use
+  # This is used for Microsoft Entra authentication and Key Vault integration
+  virtual_machine_identity_settings = {
+    type        = "UserAssigned"
+    resource_id = azapi_resource.user_assigned_identity.id
   }
   # Microsoft Entra authentication settings (requires SQL Server 2022+)
   # Uses the user-assigned managed identity to query Microsoft Graph API
