@@ -210,6 +210,26 @@ variable "sql_server_license_type" {
   }
 }
 
+variable "key_vault_credential_settings" {
+  type = object({
+    enable                   = bool
+    azure_key_vault_url      = optional(string)
+    credential_name          = optional(string)
+    service_principal_name   = optional(string)
+    service_principal_secret = optional(string)
+  })
+  default     = null
+  description = <<DESCRIPTION
+Azure Key Vault integration settings for the SQL Virtual Machine. This allows SQL Server to connect to Azure Key Vault.
+
+- `enable` - (Required) Enable or disable Key Vault credential setting.
+- `azure_key_vault_url` - (Optional) Azure Key Vault URL (e.g., https://myvault.vault.azure.net/).
+- `credential_name` - (Optional) Credential name to store in SQL Server.
+- `service_principal_name` - (Optional) Service principal name (Application/Client ID) to access Key Vault.
+- `service_principal_secret` - (Optional) Service principal secret to access Key Vault. This is a write-only property.
+DESCRIPTION
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)

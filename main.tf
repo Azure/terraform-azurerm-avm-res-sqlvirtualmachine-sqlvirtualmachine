@@ -11,6 +11,13 @@ resource "azapi_resource" "this" {
       sqlManagement            = var.sql_management
       sqlImageSku              = var.sql_image_sku
       sqlImageOffer            = var.sql_image_offer
+      keyVaultCredentialSettings = var.key_vault_credential_settings != null ? {
+        enable                 = var.key_vault_credential_settings.enable
+        azureKeyVaultUrl       = var.key_vault_credential_settings.azure_key_vault_url
+        credentialName         = var.key_vault_credential_settings.credential_name
+        servicePrincipalName   = var.key_vault_credential_settings.service_principal_name
+        servicePrincipalSecret = var.key_vault_credential_settings.service_principal_secret
+      } : null
     }
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
