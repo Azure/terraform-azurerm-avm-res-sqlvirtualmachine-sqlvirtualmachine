@@ -409,6 +409,50 @@ Server configurations management settings for the SQL Virtual Machine.
 DESCRIPTION
 }
 
+variable "assessment_settings" {
+  type = object({
+    enable          = optional(bool)
+    run_immediately = optional(bool)
+    schedule = optional(object({
+      day_of_week        = optional(string)
+      enable             = optional(bool)
+      monthly_occurrence = optional(number)
+      start_time         = optional(string)
+      weekly_interval    = optional(number)
+    }))
+  })
+  default     = null
+  description = <<DESCRIPTION
+SQL best practices assessment settings for the SQL Virtual Machine.
+
+- `enable` - (Optional) Enable or disable SQL best practices Assessment feature on SQL virtual machine.
+- `run_immediately` - (Optional) Run SQL best practices Assessment immediately on SQL virtual machine.
+- `schedule` - (Optional) Schedule for the assessment:
+  - `day_of_week` - Day of the week to run assessment. Possible values: 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'.
+  - `enable` - Enable or disable assessment schedule on SQL virtual machine.
+  - `monthly_occurrence` - Occurrence of the DayOfWeek day within a month to schedule assessment. Takes values: 1,2,3,4 and -1. Use -1 for last DayOfWeek day of the month.
+  - `start_time` - Time of the day in HH:mm format. Eg. 17:30.
+  - `weekly_interval` - Number of weeks to schedule between 2 assessment runs. Takes value from 1-6.
+DESCRIPTION
+}
+
+variable "enable_automatic_upgrade" {
+  type        = bool
+  default     = null
+  description = "Enable automatic upgrade of SQL IaaS extension Agent."
+}
+
+variable "least_privilege_mode" {
+  type        = string
+  default     = null
+  description = "SQL IaaS Agent least privilege mode. Possible values are 'Enabled' and 'NotSet'."
+
+  validation {
+    condition     = var.least_privilege_mode == null || contains(["Enabled", "NotSet"], var.least_privilege_mode)
+    error_message = "The least_privilege_mode must be one of: 'Enabled' or 'NotSet'."
+  }
+}
+
 # tflint-ignore: terraform_unused_declarations
 variable "tags" {
   type        = map(string)

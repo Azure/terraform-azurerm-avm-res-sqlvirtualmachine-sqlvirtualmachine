@@ -100,6 +100,19 @@ resource "azapi_resource" "this" {
           sqlWorkloadType = var.server_configurations_management_settings.sql_workload_type_update_settings.sql_workload_type
         } : null
       } : null
+      assessmentSettings = var.assessment_settings != null ? {
+        enable         = var.assessment_settings.enable
+        runImmediately = var.assessment_settings.run_immediately
+        schedule = var.assessment_settings.schedule != null ? {
+          dayOfWeek         = var.assessment_settings.schedule.day_of_week
+          enable            = var.assessment_settings.schedule.enable
+          monthlyOccurrence = var.assessment_settings.schedule.monthly_occurrence
+          startTime         = var.assessment_settings.schedule.start_time
+          weeklyInterval    = var.assessment_settings.schedule.weekly_interval
+        } : null
+      } : null
+      enableAutomaticUpgrade = var.enable_automatic_upgrade
+      leastPrivilegeMode     = var.least_privilege_mode
     }
   }
   create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
