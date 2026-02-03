@@ -280,18 +280,19 @@ module "test" {
   # Enable least privilege mode for better security
   least_privilege_mode = "Enabled"
   # Reference the user-assigned identity from the underlying VM for SQL Server to use
-  # This is used for Microsoft Entra authentication
   virtual_machine_identity_settings = {
     type        = "UserAssigned"
     resource_id = azapi_resource.user_assigned_identity.id
   }
   # Microsoft Entra authentication settings (requires SQL Server 2022+)
-  # Uses the user-assigned managed identity to query Microsoft Graph API
+  # IMPORTANT: Azure AD authentication cannot be enabled during initial SQL VM provisioning.
+  # It must be enabled after the SQL VM is created. To enable it:
+  # 1. First apply without azure_ad_authentication_settings
+  # 2. Then uncomment and apply again to enable Entra authentication
+  # azure_ad_authentication_settings = {
+  #   client_id = azapi_resource.user_assigned_identity.output.properties.clientId
+  # }
   server_configurations_management_settings = {
-    azure_ad_authentication_settings = {
-      # Use empty string "" for system-assigned identity, or specify the client ID of a user-assigned identity
-      client_id = azapi_resource.user_assigned_identity.output.properties.clientId
-    }
     sql_instance_settings = {
       max_dop              = 4
       max_server_memory_mb = 2048

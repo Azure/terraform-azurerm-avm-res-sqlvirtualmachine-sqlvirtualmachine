@@ -12,12 +12,22 @@ This example demonstrates how to configure:
 - Azure Key Vault with appropriate access policies for the managed identity
 - The VM must have access to Azure services
 
+## Important Limitation
+
+> **Note**: Azure AD/Entra authentication **cannot be enabled during initial SQL VM provisioning**.
+> It must be enabled in a second apply after the SQL VM is created. This is a limitation of the Azure API.
+>
+> To enable Entra authentication:
+> 1. First, apply without `azure_ad_authentication_settings`
+> 2. Then, uncomment the `azure_ad_authentication_settings` block and apply again
+
 ## Features Demonstrated
 
 ### Microsoft Entra Authentication
 - Uses a user-assigned managed identity for Entra ID authentication
 - Enables Windows authentication with Entra ID credentials
 - Configured via `server_configurations_management_settings.azure_ad_authentication_settings`
+- **Must be enabled after initial provisioning** (see limitation above)
 
 ### Azure Key Vault Integration
 - Creates an Azure Key Vault with access policies for the managed identity and service principal
