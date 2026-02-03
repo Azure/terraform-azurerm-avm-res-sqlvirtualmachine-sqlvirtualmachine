@@ -32,7 +32,6 @@ resource "azapi_resource" "this" {
 
 data "azapi_client_config" "current" {}
 
-# required AVM resources interfaces (scoped to the created SQL Virtual Machine)
 resource "azapi_resource" "management_lock" {
   count = var.lock != null ? 1 : 0
 
