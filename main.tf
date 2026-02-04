@@ -111,7 +111,7 @@ resource "azapi_resource" "this" {
           weeklyInterval    = var.assessment_settings.schedule.weekly_interval
         } : null
       } : null
-      enableAutomaticUpgrade           = var.enable_automatic_upgrade
+      enableAutomaticUpgrade           = var.automatic_upgrade_enabled
       leastPrivilegeMode               = var.least_privilege_mode
       sqlVirtualMachineGroupResourceId = var.sql_virtual_machine_group_resource_id
       virtualMachineIdentitySettings = var.virtual_machine_identity_settings != null ? {
@@ -126,13 +126,10 @@ resource "azapi_resource" "this" {
       wsfcStaticIp = var.wsfc_static_ip
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  # Ignore properties with null values to prevent idempotency issues where Azure returns default values
-  # This ensures null values in body are not sent to API, avoiding drift with Azure-managed defaults
-  ignore_null_property   = true
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  response_export_values = ["*"]
+  response_export_values = []
   tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 
@@ -162,16 +159,17 @@ resource "azapi_resource" "management_lock" {
       notes = var.lock.kind == "CanNotDelete" ? "Cannot delete the resource or its child resources." : "Cannot delete or modify the resource or its child resources."
     }
   }
-  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  read_headers   = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }
 
 resource "azapi_resource" "role_assignment" {
   for_each = var.role_assignments
 
-  name      = uuid()
+  name      = uuidv5("url", "${azapi_resource.this.id}-${each.value.principal_id}-${strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : "${azapi_resource.this.id}${local.role_definition_resource_substring}/${each.value.role_definition_id_or_name}"}")
   parent_id = azapi_resource.this.id
   type      = "Microsoft.Authorization/roleAssignments@2022-04-01"
   body = {
@@ -185,13 +183,9 @@ resource "azapi_resource" "role_assignment" {
       description                        = "Role assignment managed by AVM module"
     }
   }
-  create_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  ignore_missing_property = true
-  read_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  update_headers          = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-
-  lifecycle {
-    ignore_changes = [name]
-  }
+  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  response_export_values = []
+  update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
 }

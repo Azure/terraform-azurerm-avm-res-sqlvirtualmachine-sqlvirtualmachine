@@ -289,8 +289,8 @@ module "test" {
     }
   }
   # Enable automatic upgrade for SQL IaaS Agent
-  enable_automatic_upgrade = true
-  enable_telemetry         = var.enable_telemetry
+  automatic_upgrade_enabled = true
+  enable_telemetry          = var.enable_telemetry
   # Azure Key Vault integration using the service principal credentials
   # The service principal password is write-only and ephemeral
   key_vault_credential_settings = {

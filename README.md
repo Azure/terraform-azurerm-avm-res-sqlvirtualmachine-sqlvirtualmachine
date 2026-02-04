@@ -179,27 +179,11 @@ object({
 
 Default: `null`
 
-### <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key)
+### <a name="input_automatic_upgrade_enabled"></a> [automatic\_upgrade\_enabled](#input\_automatic\_upgrade\_enabled)
 
-Description: A map describing customer-managed keys to associate with the resource. This includes the following properties:
-- `key_vault_resource_id` - The resource ID of the Key Vault where the key is stored.
-- `key_name` - The name of the key.
-- `key_version` - (Optional) The version of the key. If not specified, the latest version is used.
-- `user_assigned_identity` - (Optional) An object representing a user-assigned identity with the following properties:
-  - `resource_id` - The resource ID of the user-assigned identity.
+Description: Enable automatic upgrade of SQL IaaS extension Agent.
 
-Type:
-
-```hcl
-object({
-    key_vault_resource_id = string
-    key_name              = string
-    key_version           = optional(string, null)
-    user_assigned_identity = optional(object({
-      resource_id = string
-    }), null)
-  })
-```
+Type: `bool`
 
 Default: `null`
 
@@ -236,14 +220,6 @@ map(object({
 ```
 
 Default: `{}`
-
-### <a name="input_enable_automatic_upgrade"></a> [enable\_automatic\_upgrade](#input\_enable\_automatic\_upgrade)
-
-Description: Enable automatic upgrade of SQL IaaS extension Agent.
-
-Type: `bool`
-
-Default: `null`
 
 ### <a name="input_enable_telemetry"></a> [enable\_telemetry](#input\_enable\_telemetry)
 
@@ -584,10 +560,6 @@ The following outputs are exported:
 ### <a name="output_name"></a> [name](#output\_name)
 
 Description: The name of the SQL Virtual Machine.
-
-### <a name="output_resource"></a> [resource](#output\_resource)
-
-Description: This is the full output for the resource.
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
