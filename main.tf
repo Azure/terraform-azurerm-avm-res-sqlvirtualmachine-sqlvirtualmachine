@@ -126,8 +126,11 @@ resource "azapi_resource" "this" {
       wsfcStaticIp = var.wsfc_static_ip
     }
   }
-  create_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
-  delete_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  create_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  delete_headers = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  # Ignore properties with null values to prevent idempotency issues where Azure returns default values
+  # This ensures null values in body are not sent to API, avoiding drift with Azure-managed defaults
+  ignore_null_property   = true
   read_headers           = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   response_export_values = ["*"]
   tags                   = var.tags
