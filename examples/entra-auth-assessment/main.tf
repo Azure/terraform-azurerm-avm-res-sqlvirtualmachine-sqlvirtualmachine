@@ -124,6 +124,20 @@ resource "azapi_resource" "user_assigned_identity" {
   type      = "Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31"
 }
 
+# Assign Directory Readers role to the managed identity for Microsoft Graph API access
+# This is required for Azure AD authentication in SQL Server
+# The Directory Readers role allows the identity to read directory data from Microsoft Entra ID
+data "azuread_directory_roles" "directory_readers" {}
+
+locals {
+  directory_readers_role_id = [for role in data.azuread_directory_roles.directory_readers.roles : role.object_id if role.display_name == "Directory Readers"][0]
+}
+
+resource "azuread_directory_role_assignment" "sql_identity_directory_readers" {
+  principal_object_id = azapi_resource.user_assigned_identity.output.properties.principalId
+  role_id             = local.directory_readers_role_id
+}
+
 # Create an Azure AD Application and Service Principal for Key Vault integration
 resource "azuread_application" "keyvault_sp" {
   display_name = "sql-kv-integration-${module.naming.unique-seed}"
@@ -145,44 +159,35 @@ resource "azuread_application_password" "keyvault_sp" {
   }
 }
 
-# Create a Key Vault for SQL Server integration (using azurerm for better integration)
-resource "azurerm_key_vault" "this" {
-  location                   = azapi_resource.resource_group.location
-  name                       = module.naming.key_vault.name_unique
-  resource_group_name        = azapi_resource.resource_group.name
-  sku_name                   = "standard"
-  tenant_id                  = data.azapi_client_config.current.tenant_id
-  rbac_authorization_enabled = false
-  soft_delete_retention_days = 7
-  purge_protection_enabled   = false
-}
+# Create a Key Vault for SQL Server integration using AVM module
+module "keyvault" {
+  source  = "Azure/avm-res-keyvault-vault/azurerm"
+  version = "0.10.2"
 
-# Access policy for the user-assigned identity (SQL Server)
-resource "azurerm_key_vault_access_policy" "sql_identity" {
-  key_vault_id = azurerm_key_vault.this.id
-  tenant_id    = data.azapi_client_config.current.tenant_id
-  object_id    = azapi_resource.user_assigned_identity.output.properties.principalId
-
-  key_permissions = [
-    "Get", "List", "WrapKey", "UnwrapKey"
-  ]
-  secret_permissions = [
-    "Get", "List"
-  ]
-}
-
-# Access policy for the Key Vault service principal
-resource "azurerm_key_vault_access_policy" "keyvault_sp" {
-  key_vault_id = azurerm_key_vault.this.id
-  tenant_id    = data.azapi_client_config.current.tenant_id
-  object_id    = azuread_service_principal.keyvault_sp.object_id
-
-  key_permissions = [
-    "Get", "List", "WrapKey", "UnwrapKey"
-  ]
-  secret_permissions = [
-    "Get", "List"
-  ]
+  location            = azapi_resource.resource_group.location
+  name                = module.naming.key_vault.name_unique
+  resource_group_name = azapi_resource.resource_group.name
+  tenant_id           = data.azapi_client_config.current.tenant_id
+  enable_telemetry    = var.enable_telemetry
+  # Access policies for SQL Server integration
+  legacy_access_policies = {
+    # Access policy for the user-assigned identity (SQL Server)
+    sql_identity = {
+      object_id          = azapi_resource.user_assigned_identity.output.properties.principalId
+      key_permissions    = ["Get", "List", "WrapKey", "UnwrapKey"]
+      secret_permissions = ["Get", "List"]
+    }
+    # Access policy for the Key Vault service principal
+    keyvault_sp = {
+      object_id          = azuread_service_principal.keyvault_sp.object_id
+      key_permissions    = ["Get", "List", "WrapKey", "UnwrapKey"]
+      secret_permissions = ["Get", "List"]
+    }
+  }
+  legacy_access_policies_enabled = true
+  purge_protection_enabled       = false
+  sku_name                       = "standard"
+  soft_delete_retention_days     = 7
 }
 
 data "azapi_client_config" "current" {}
@@ -249,6 +254,7 @@ resource "azapi_resource" "windows_virtual_machine" {
 # This allows users to RDP to the VM using their Entra ID credentials
 # Reference: https://learn.microsoft.com/en-us/entra/identity/devices/howto-vm-sign-in-azure-ad-windows
 resource "azapi_resource" "aad_login_extension" {
+  location  = azapi_resource.resource_group.location
   name      = "AADLoginForWindows"
   parent_id = azapi_resource.windows_virtual_machine.id
   type      = "Microsoft.Compute/virtualMachines/extensions@2024-03-01"
@@ -260,7 +266,6 @@ resource "azapi_resource" "aad_login_extension" {
       autoUpgradeMinorVersion = true
     }
   }
-  location = azapi_resource.resource_group.location
 }
 
 # This is the module call for SQL Virtual Machine with Microsoft Entra auth and Assessment
@@ -290,26 +295,16 @@ module "test" {
   # The service principal password is write-only and ephemeral
   key_vault_credential_settings = {
     enable                   = true
-    azure_key_vault_url      = azurerm_key_vault.this.vault_uri
+    azure_key_vault_url      = module.keyvault.uri
     credential_name          = "SqlKeyVaultCredential"
     service_principal_name   = azuread_application.keyvault_sp.client_id
     service_principal_secret = azuread_application_password.keyvault_sp.value
   }
   # Enable least privilege mode for better security
   least_privilege_mode = "Enabled"
-  # Reference the user-assigned identity from the underlying VM for SQL Server to use
-  virtual_machine_identity_settings = {
-    type        = "UserAssigned"
-    resource_id = azapi_resource.user_assigned_identity.id
-  }
-  # Microsoft Entra authentication settings (requires SQL Server 2022+)
-  # IMPORTANT: Azure AD authentication cannot be enabled during initial SQL VM provisioning.
-  # It must be enabled after the SQL VM is created. To enable it:
-  # 1. First apply without azure_ad_authentication_settings
-  # 2. Then uncomment and apply again to enable Entra authentication
-  # azure_ad_authentication_settings = {
-  #   client_id = azapi_resource.user_assigned_identity.output.properties.clientId
-  # }
+  # SQL Server configuration settings
+  # NOTE: Azure AD authentication cannot be enabled during initial SQL VM provisioning.
+  # It must be configured after the SQL VM is created using azapi_update_resource.
   server_configurations_management_settings = {
     sql_instance_settings = {
       max_dop              = 4
@@ -326,4 +321,30 @@ module "test" {
   sql_image_sku           = "Developer"
   sql_management          = "Full"
   sql_server_license_type = "PAYG"
+  # Reference the user-assigned identity from the underlying VM for SQL Server to use
+  virtual_machine_identity_settings = {
+    type        = "UserAssigned"
+    resource_id = azapi_resource.user_assigned_identity.id
+  }
+}
+
+# Enable Microsoft Entra (Azure AD) authentication after SQL VM is created
+# Azure does not support enabling Azure AD authentication during initial provisioning
+# This update resource enables it after the SQL VM is successfully created
+resource "azapi_update_resource" "enable_entra_auth" {
+  name      = module.test.name
+  parent_id = "/subscriptions/${data.azapi_client_config.current.subscription_id}/resourceGroups/${azapi_resource.resource_group.name}"
+  type      = "Microsoft.SqlVirtualMachine/sqlVirtualMachines@2023-10-01"
+  body = {
+    properties = {
+      serverConfigurationsManagementSettings = {
+        azureAdAuthenticationSettings = {
+          # Use empty string "" for system-assigned identity, or specify the client ID of a user-assigned identity
+          clientId = azapi_resource.user_assigned_identity.output.properties.clientId
+        }
+      }
+    }
+  }
+
+  depends_on = [module.test]
 }
