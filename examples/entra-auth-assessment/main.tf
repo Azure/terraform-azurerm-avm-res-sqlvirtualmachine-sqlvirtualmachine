@@ -32,7 +32,7 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.3"
+  version = "0.12.0"
 
   enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
