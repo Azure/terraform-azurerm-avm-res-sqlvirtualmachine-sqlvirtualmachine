@@ -70,7 +70,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 5.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -90,7 +90,7 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.3"
+  version = "0.12.0"
 
   enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
@@ -419,7 +419,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) (~> 3.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 5.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -486,7 +486,7 @@ Version: 0.4.3
 
 Source: Azure/avm-utl-regions/azurerm
 
-Version: 0.9.3
+Version: 0.12.0
 
 ### <a name="module_test"></a> [test](#module\_test)
 
