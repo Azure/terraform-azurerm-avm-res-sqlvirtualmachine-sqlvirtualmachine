@@ -132,6 +132,7 @@ resource "azapi_resource" "this" {
   response_export_values = []
   tags                   = var.tags
   update_headers         = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
+  ignore_casing          = true
 
   # Note: SQL Virtual Machine only supports SystemAssigned identity at the resource level.
   # User-assigned identities should be configured on the underlying VM and referenced via
