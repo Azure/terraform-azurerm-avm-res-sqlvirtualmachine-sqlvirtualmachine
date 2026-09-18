@@ -34,7 +34,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.3"
 
-  enable_telemetry       = false
+  enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
   is_recommended         = true
   use_cached_data        = true
@@ -168,7 +168,7 @@ module "keyvault" {
   name                = module.naming.key_vault.name_unique
   resource_group_name = azapi_resource.resource_group.name
   tenant_id           = data.azapi_client_config.current.tenant_id
-  enable_telemetry    = false
+  enable_telemetry    = var.enable_telemetry
   # Access policies for SQL Server integration
   legacy_access_policies = {
     # Access policy for the user-assigned identity (SQL Server)
@@ -290,7 +290,7 @@ module "test" {
   }
   # Enable automatic upgrade for SQL IaaS Agent
   automatic_upgrade_enabled = true
-  enable_telemetry          = false
+  enable_telemetry          = var.enable_telemetry
   # Azure Key Vault integration using the service principal credentials
   # The service principal password is write-only and ephemeral
   key_vault_credential_settings = {
