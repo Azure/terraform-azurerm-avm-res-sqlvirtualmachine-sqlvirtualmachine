@@ -28,7 +28,7 @@ module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
   version = "0.9.3"
 
-  enable_telemetry       = false
+  enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
   is_recommended         = true
   use_cached_data        = true
@@ -171,7 +171,7 @@ module "test" {
   name                        = azapi_resource.windows_virtual_machine.name
   resource_group_name         = azapi_resource.resource_group.name
   virtual_machine_resource_id = azapi_resource.windows_virtual_machine.id
-  enable_telemetry            = false
+  enable_telemetry            = var.enable_telemetry
   sql_image_offer             = "SQL2019-WS2019"
   sql_image_sku               = "Developer"
   sql_management              = "Full"
@@ -218,7 +218,7 @@ If it is set to false, then no telemetry will be collected.
 
 Type: `bool`
 
-Default: `true`
+Default: `false`
 
 ## Outputs
 
