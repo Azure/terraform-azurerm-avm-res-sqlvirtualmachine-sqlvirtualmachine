@@ -126,6 +126,7 @@ resource "azapi_resource" "this" {
       wsfcStaticIp = var.wsfc_static_ip
     }
   }
+  ignore_casing          = true
   response_export_values = []
   tags                   = var.tags
 
