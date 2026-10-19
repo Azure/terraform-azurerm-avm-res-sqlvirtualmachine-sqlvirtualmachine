@@ -167,7 +167,7 @@ resource "azuread_application_password" "keyvault_sp" {
 # Create a Key Vault for SQL Server integration using AVM module
 module "keyvault" {
   source    = "Azure/avm-res-keyvault-vault/azurerm"
-  version   = "0.10.2"
+  version   = "0.12.0"
   providers = { modtm = modtm }
 
   location            = azapi_resource.resource_group.location
