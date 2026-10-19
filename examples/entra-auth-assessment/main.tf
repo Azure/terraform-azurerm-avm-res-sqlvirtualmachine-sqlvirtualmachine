@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azapi = {
       source  = "Azure/azapi"
-      version = "~> 2.4"
+      version = "~> 2.12"
     }
     azuread = {
       source  = "hashicorp/azuread"
@@ -13,6 +13,10 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
+    }
+    modtm = {
+      source  = "registry.terraform.io/azure/modtm"
+      version = "~> 0.3"
     }
     random = {
       source  = "hashicorp/random"
@@ -32,8 +36,9 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.9.3"
+  version = "0.13.0"
 
+  location               = var.location
   enable_telemetry       = var.enable_telemetry
   has_availability_zones = true
   is_recommended         = true
@@ -47,8 +52,8 @@ resource "random_integer" "region_index" {
 
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
-  source  = "Azure/naming/azurerm"
-  version = "0.4.3"
+  source  = "Azure/avm-utl-naming/azure"
+  version = "0.2.0"
 }
 
 # Generate a random password for the VM admin
@@ -161,8 +166,9 @@ resource "azuread_application_password" "keyvault_sp" {
 
 # Create a Key Vault for SQL Server integration using AVM module
 module "keyvault" {
-  source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.2"
+  source    = "Azure/avm-res-keyvault-vault/azurerm"
+  version   = "0.10.2"
+  providers = { modtm = modtm }
 
   location            = azapi_resource.resource_group.location
   name                = module.naming.key_vault.name_unique
