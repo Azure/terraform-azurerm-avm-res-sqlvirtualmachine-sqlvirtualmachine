@@ -72,6 +72,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = "~> 0.3"
@@ -224,9 +225,8 @@ resource "azuread_application_password" "keyvault_sp" {
 
 # Create a Key Vault for SQL Server integration using AVM module
 module "keyvault" {
-  source    = "Azure/avm-res-keyvault-vault/azurerm"
-  version   = "0.10.2"
-  providers = { modtm = modtm }
+  source  = "Azure/avm-res-keyvault-vault/azurerm"
+  version = "0.10.2"
 
   location            = azapi_resource.resource_group.location
   name                = module.naming.key_vault.name_unique
