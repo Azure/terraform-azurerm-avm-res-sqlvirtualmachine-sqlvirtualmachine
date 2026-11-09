@@ -37,7 +37,7 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.0"
+  version = "0.13.2"
 
   location               = var.location
   enable_telemetry       = var.enable_telemetry
@@ -54,7 +54,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # Generate a random password for the VM admin
@@ -168,7 +168,7 @@ resource "azuread_application_password" "keyvault_sp" {
 # Create a Key Vault for SQL Server integration using AVM module
 module "keyvault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.10.2"
+  version = "0.12.0"
 
   location            = azapi_resource.resource_group.location
   name                = module.naming.key_vault.name_unique
