@@ -1,5 +1,5 @@
 terraform {
-  required_version = "~> 1.5"
+  required_version = ">= 1.12.0, < 2.0.0"
 
   required_providers {
     azapi = {
@@ -13,11 +13,6 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
-    }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
     }
     random = {
       source  = "hashicorp/random"
@@ -168,13 +163,13 @@ resource "azuread_application_password" "keyvault_sp" {
 # Create a Key Vault for SQL Server integration using AVM module
 module "keyvault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.12.0"
+  version = "0.13.1"
 
-  location            = azapi_resource.resource_group.location
-  name                = module.naming.key_vault.name_unique
-  resource_group_name = azapi_resource.resource_group.name
-  tenant_id           = data.azapi_client_config.current.tenant_id
-  enable_telemetry    = var.enable_telemetry
+  location         = azapi_resource.resource_group.location
+  name             = module.naming.key_vault.name_unique
+  parent_id        = azapi_resource.resource_group.id
+  tenant_id        = data.azapi_client_config.current.tenant_id
+  enable_telemetry = var.enable_telemetry
   # Access policies for SQL Server integration
   legacy_access_policies = {
     # Access policy for the user-assigned identity (SQL Server)
