@@ -32,7 +32,7 @@ provider "azurerm" {
 ## Section to provide a random Azure region for the resource group
 module "regions" {
   source  = "Azure/avm-utl-regions/azurerm"
-  version = "0.13.2"
+  version = "0.15.0"
 
   location               = var.location
   enable_telemetry       = var.enable_telemetry
@@ -163,7 +163,7 @@ resource "azuread_application_password" "keyvault_sp" {
 # Create a Key Vault for SQL Server integration using AVM module
 module "keyvault" {
   source  = "Azure/avm-res-keyvault-vault/azurerm"
-  version = "0.13.1"
+  version = "0.13.2"
 
   location         = azapi_resource.resource_group.location
   name             = module.naming.key_vault.name_unique
